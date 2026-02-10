@@ -1,5 +1,5 @@
 "use client"; 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { tunStory } from '../data/story'; 
@@ -75,7 +75,7 @@ export default function GameContainer() {
   };
 
   const renderView = () => {
-    // 📸 หน้าแกลเลอรี (Mobile Optimized)
+    // 📸 1. หน้าแกลเลอรี (แก้จุด Error scene is not defined)
     if (showFinalFrame) {
       const roomFolder = viewingRoom.replace("/", "-"); 
       const photoSrc = `/images/room${roomFolder}/${photoIndex}.jpg`;
@@ -83,8 +83,6 @@ export default function GameContainer() {
       return (
         <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md mx-auto px-4 py-6 font-sans">
           <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100 relative">
-            
-            {/* Image Section */}
             <div className="aspect-[4/5] relative bg-slate-900 group">
               <AnimatePresence mode="wait">
                 <motion.img 
@@ -110,7 +108,6 @@ export default function GameContainer() {
               </div>
             </div>
 
-            {/* UI Section */}
             {!isCleanView && (
               <div className="p-6 space-y-6">
                 <div className="bg-pink-50/50 p-4 rounded-2xl border border-pink-100 text-sm text-slate-600 italic text-center relative">
@@ -119,8 +116,8 @@ export default function GameContainer() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={handleShare} className="py-3 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all">🔗 {shareStatus}</button>
-                  <button onClick={() => setIsCleanView(true)} className="py-3 bg-pink-100 text-pink-600 rounded-xl text-xs font-bold active:scale-95 transition-all">📸 Capture Mode</button>
+                  <button onClick={handleShare} className="py-3 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg">🔗 {shareStatus}</button>
+                  <button onClick={() => setIsCleanView(true)} className="py-3 bg-pink-100 text-pink-600 rounded-xl text-xs font-bold">📸 Capture Mode</button>
                 </div>
 
                 <div className="pt-4 border-t border-slate-50">
@@ -143,56 +140,50 @@ export default function GameContainer() {
       );
     }
 
-    // 💌 หน้าจดหมาย (Mobile UI)
+    // 💌 2. หน้าจดหมาย
     if (showResult) {
       const personalNote = getPersonalNote();
       return (
         <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto px-6 py-10 font-sans">
           <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-t-[6px] border-pink-200 relative overflow-hidden">
-            <div className="absolute top-6 right-6 opacity-[0.05] text-7xl font-black italic italic">37</div>
+            <div className="absolute top-6 right-6 opacity-[0.05] text-7xl font-black italic">37</div>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6">Final Page • {userName} ม.{userRoom}</p>
             
             <div className="space-y-6 text-slate-600">
               <h2 className="text-2xl font-black text-slate-800 italic">แด่... {userName}</h2>
-              <p className="text-sm leading-relaxed font-light">
-                ยังจำวันแรกที่เดินผ่านรั้ว <span className="text-pink-400 font-bold">ต.อ.น.</span> ได้ไหม? จากคนแปลกหน้า สู่ความทรงจำที่จะอยู่กับเราไปตลอดชีวิต...
-              </p>
+              <p className="text-sm leading-relaxed font-light">ยังจำวันแรกที่เดินผ่านรั้ว <span className="text-pink-400 font-bold">ต.อ.น.</span> ได้ไหม? จากคนแปลกหน้า สู่ความทรงจำที่จะอยู่กับเราตลอดไป...</p>
               <div className="p-5 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-100 text-center">
                 <p className="text-base font-bold text-pink-500 italic">"{personalNote}"</p>
               </div>
-              <p className="text-lg font-black text-slate-800 leading-tight">
-                ขอบคุณที่เติบโตมาด้วยกันนะ <br/>
-                <span className="text-pink-400 italic">อภินิหารสะพานสูง</span> ตลอดไป
-              </p>
+              <p className="text-lg font-black text-slate-800 leading-tight">ขอบคุณที่เติบโตมาด้วยกันนะ <br/><span className="text-pink-400 italic">อภินิหารสะพานสูง</span> ตลอดไป</p>
             </div>
 
             <div className="mt-10 pt-6 border-t border-slate-50 flex justify-between items-center">
-              <div>
-                <p className="text-[8px] font-bold text-pink-300 uppercase tracking-widest">Signed,</p>
-                <p className="text-sm font-black text-slate-800 italic">Class 37 Archive</p>
-              </div>
-              <button onClick={() => { setShowFinalFrame(true); randomBlessing(); }} className="px-6 py-3 bg-pink-500 text-white rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all">เปิดภาพสุดท้าย →</button>
+              <div><p className="text-[8px] font-bold text-pink-300">Signed,</p><p className="text-sm font-black text-slate-800 italic">Class 37 Archive</p></div>
+              <button onClick={() => { setShowFinalFrame(true); randomBlessing(); }} className="px-6 py-3 bg-pink-500 text-white rounded-xl text-xs font-bold shadow-lg">เปิดภาพสุดท้าย →</button>
             </div>
           </div>
         </motion.div>
       );
     }
 
-    // 🎮 หน้าเล่นเกม (Mobile UI)
+    // 🎮 3. หน้าเล่นเกม (ย้ายตัวแปร scene มาไว้ตรงนี้เพื่อแก้ Error)
+    const scene = tunStory[step]; 
+
     return (
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="w-full max-w-sm mx-auto px-6 py-4">
           <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-pink-50">
             <div className="h-52 relative overflow-hidden bg-pink-50">
-              <motion.img src={scene.image} className="w-full h-full object-cover" initial={{ scale: 1.1 }} animate={{ scale: 1 }} />
-              <div className="absolute top-4 right-6 text-pink-500/20 text-5xl font-black italic">{scene.id}</div>
+              <motion.img key={step} src={scene?.image} className="w-full h-full object-cover" initial={{ scale: 1.1 }} animate={{ scale: 1 }} />
+              <div className="absolute top-4 right-6 text-pink-500/20 text-5xl font-black italic">{scene?.id}</div>
             </div>
             <div className="p-8">
-              <h1 className="text-2xl font-black text-slate-800 mb-4 tracking-tighter">{scene.title}</h1>
-              <p className="text-slate-400 text-sm mb-8 font-light leading-relaxed">{scene.description}</p>
+              <h1 className="text-2xl font-black text-slate-800 mb-4 tracking-tighter">{scene?.title}</h1>
+              <p className="text-slate-400 text-sm mb-8 font-light leading-relaxed">{scene?.description}</p>
               <div className="space-y-3">
-                {scene.choices.map((choice, i) => (
-                  <button key={i} onClick={() => handleChoice(choice.score)} className="w-full p-4 rounded-2xl border border-slate-100 text-left text-xs font-bold text-slate-600 hover:bg-pink-500 hover:text-white active:scale-[0.98] transition-all group">
+                {scene?.choices.map((choice, i) => (
+                  <button key={i} onClick={() => handleChoice(choice.score)} className="w-full p-4 rounded-2xl border border-slate-100 text-left text-xs font-bold text-slate-600 hover:bg-pink-500 hover:text-white transition-all">
                     {choice.text} <span className="float-right opacity-0 group-hover:opacity-100">→</span>
                   </button>
                 ))}
