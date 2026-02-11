@@ -9,9 +9,13 @@ export default function GameContainer() {
   const userName = searchParams.get('name') || 'เพื่อน';
   const userRoom = searchParams.get('room') || '37';
 
+  // --- States สำหรับ Version 1.2 ---
+  const [currentStage, setCurrentStage] = useState('intro'); // intro, credits, game, secret, result, final
+  const [secretStep, setSecretStep] = useState(0);
+  const [secrets, setSecrets] = useState({ q1: "", q2: "", q3: "" });
+
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState({ stealth: 0, chill: 0, friendship: 0, sport: 0, student: 0 });
-  const [showResult, setShowResult] = useState(false);
   const [showFinalFrame, setShowFinalFrame] = useState(false);
 
   const [viewingRoom, setViewingRoom] = useState(userRoom); 
@@ -27,9 +31,15 @@ export default function GameContainer() {
     "ขอให้แกได้เข้าคณะที่ฝันนะ มารีวิวชีวิตมหาลัยให้ฟังด้วย!",
     "โชคดีในโลกของคนโตนะ อย่าลืมรอยยิ้มตอนอยู่เตรียมฯ น้อมล่ะ",
     "คิดถึงวันปั่นงานวินาทีสุดท้ายกับพวกมึงว่ะ โชคดีนะทุกคน",
-    "ถ้าเหนื่อยก็แค่แวะกลับมาเจอกันที่ร้านหมูกระทะหน้าโรงเรียนนะ",
+    "ถ้าเหนื่อยก็แค่แวะกลับมาเจกันที่ร้านหมูกระทะหน้าโรงเรียนนะ",
     "ดีใจที่ได้เป็นเพื่อนร่วมรุ่น 37 กับแกนะ",
     "ขอให้แกเติบโตไปเป็นผู้ใหญ่ที่มีความสุขที่สุดนะ"
+  ];
+
+  const secretQuestions = [
+    { id: "q1", title: "มีอะไรจะบอกแต่ไม่กล้าบอกมั้ย?", placeholder: "ระบายออกมาได้เลย..." },
+    { id: "q2", title: "ถ้าพรุ่งนี้ตื่นมาแล้วยังอยู่ ม.4 แกจะทำอะไร?", placeholder: "อยากแก้ไขอะไรมั้ย..." },
+    { id: "q3", title: "ฝากข้อความถึง 'ใครบางคน' ในรุ่น 37 หน่อย", placeholder: "บอกผ่านท้องฟ้าสะพานสูงไป..." }
   ];
 
   const randomBlessing = () => {
@@ -47,8 +57,19 @@ export default function GameContainer() {
   const handleChoice = (scoreKey) => {
     if (audioRef.current && audioRef.current.paused) audioRef.current.play();
     setScores(prev => ({ ...prev, [scoreKey]: prev[scoreKey] + 1 }));
-    if (step < tunStory.length - 1) setStep(step + 1);
-    else setShowResult(true);
+    if (step < tunStory.length - 1) {
+      setStep(step + 1);
+    } else {
+      setCurrentStage('secret');
+    }
+  };
+
+  const handleSecretSubmit = () => {
+    if (secretStep < secretQuestions.length - 1) {
+      setSecretStep(secretStep + 1);
+    } else {
+      setCurrentStage('result');
+    }
   };
 
   const handleShare = () => {
@@ -75,80 +96,110 @@ export default function GameContainer() {
   };
 
   const renderView = () => {
-    // 📸 1. หน้าแกลเลอรี (แก้จุด Error scene is not defined)
-    if (showFinalFrame) {
-      const roomFolder = viewingRoom.replace("/", "-"); 
-      const photoSrc = `/images/room${roomFolder}/${photoIndex}.jpg`;
-
+    // 🌸 1. หน้าบรรยายวันสุดท้าย (New)
+    if (currentStage === 'intro') {
       return (
-        <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md mx-auto px-4 py-6 font-sans">
-          <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100 relative">
-            <div className="aspect-[4/5] relative bg-slate-900 group">
-              <AnimatePresence mode="wait">
-                <motion.img 
-                  key={`${viewingRoom}-${photoIndex}`} 
-                  src={photoSrc} 
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="w-full h-full object-cover" 
-                  onError={(e) => { e.target.src = "/images/group-37.jpg"; }} 
-                />
-              </AnimatePresence>
-              
-              {!isCleanView && (
-                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 z-20">
-                  <button onClick={() => setPhotoIndex(prev => (prev > 0 ? prev - 1 : maxPhotosPerRoom - 1))} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center">←</button>
-                  <button onClick={() => setPhotoIndex(prev => (prev < maxPhotosPerRoom - 1 ? prev + 1 : 0))} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center">→</button>
-                </div>
-              )}
-              
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
-              <div className="absolute bottom-6 left-6 text-left">
-                <h1 className="text-2xl font-black text-white italic">"ห้อง {viewingRoom} รุ่น 37"</h1>
-                <p className="text-pink-400 text-[10px] font-bold tracking-widest uppercase">Memory {photoIndex + 1} / {maxPhotosPerRoom}</p>
-              </div>
-            </div>
-
-            {!isCleanView && (
-              <div className="p-6 space-y-6">
-                <div className="bg-pink-50/50 p-4 rounded-2xl border border-pink-100 text-sm text-slate-600 italic text-center relative">
-                  "{blessing}"
-                  <button onClick={randomBlessing} className="block w-full mt-2 text-[9px] text-slate-400 underline uppercase tracking-tighter">Random Blessing 🎲</button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={handleShare} className="py-3 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg">🔗 {shareStatus}</button>
-                  <button onClick={() => setIsCleanView(true)} className="py-3 bg-pink-100 text-pink-600 rounded-xl text-xs font-bold">📸 Capture Mode</button>
-                </div>
-
-                <div className="pt-4 border-t border-slate-50">
-                  <p className="text-[10px] font-black text-slate-300 uppercase mb-3 tracking-widest text-center">Select Room</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[...Array(14)].map((_, i) => (
-                      <button key={i} onClick={() => { setViewingRoom(`6/${i+1}`); setPhotoIndex(0); }} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${viewingRoom === `6/${i+1}` ? 'bg-pink-500 text-white shadow-md' : 'bg-slate-50 text-slate-400'}`}>6/{i + 1}</button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {isCleanView && (
-              <button onClick={() => setIsCleanView(false)} className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-pink-500 text-white rounded-full text-xs font-bold shadow-2xl animate-bounce">Back to Normal</button>
-            )}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-sm px-6 text-center font-sans">
+          <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-pink-100">
+            <h1 className="text-3xl font-black text-slate-800 italic mb-6">วันสุดท้ายที่... ต.อ.น.</h1>
+            <p className="text-slate-500 leading-relaxed font-light mb-10">
+              "ท้องฟ้าที่สะพานสูงวันนี้ดูแปลกไปกว่าทุกวัน... <br/>
+              เสียงกระดิ่งเลิกเรียนครั้งสุดท้ายกำลังจะดังขึ้น <br/>
+              เก็บความทรงจำของแกใส่กระเป๋า แล้วเดินไปด้วยกันนะ"
+            </p>
+            <button onClick={() => setCurrentStage('credits')} className="w-full py-4 bg-pink-500 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">ถัดไป</button>
           </div>
-          <button onClick={() => window.location.href = '/'} className="mt-8 text-slate-400 text-[9px] font-bold uppercase tracking-[0.3em] block mx-auto opacity-50">Close Archive</button>
         </motion.div>
       );
     }
 
-    // 💌 2. หน้าจดหมาย
-    if (showResult) {
+    // 👤 2. หน้าจัดทำโดย (New)
+    if (currentStage === 'credits') {
+      return (
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm px-6 text-center font-sans">
+          <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-pink-100">
+            <div className="w-28 h-28 mx-auto mb-6 rounded-full overflow-hidden border-4 border-pink-200 shadow-xl">
+               <img src="/images/me.jpg" className="w-full h-full object-cover" onError={(e) => e.target.src = "/images/group-37.jpg"} />
+            </div>
+            <p className="text-[10px] font-black text-pink-400 uppercase tracking-widest mb-2">Developed By</p>
+            <h2 className="text-2xl font-black text-slate-800 mb-2">ธนกร ชูวงศ์วาลย์</h2>
+            <p className="text-slate-500 font-light italic mb-10 text-sm">ข้อมูลเดิม... เพิ่มเติมคือความตั้งใจ <br/> รุ่น 37 ต.อ.น.</p>
+            <button onClick={() => setCurrentStage('game')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">เริ่มบันทึกความทรงจำ</button>
+          </div>
+        </motion.div>
+      );
+    }
+
+    // 📸 3. หน้าแกลเลอรี (Original Logic)
+    if (showFinalFrame) {
+      const roomFolder = viewingRoom.replace("/", "-"); 
+      const photoSrc = `/images/room${roomFolder}/${photoIndex}.jpg`;
+      return (
+        <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md mx-auto px-4 py-6 font-sans">
+          <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100 relative">
+            <div className="aspect-[4/5] relative bg-slate-900">
+              <AnimatePresence mode="wait">
+                <motion.img key={`${viewingRoom}-${photoIndex}`} src={photoSrc} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full object-cover" onError={(e) => { e.target.src = "/images/group-37.jpg"; }} />
+              </AnimatePresence>
+              {!isCleanView && (
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 z-20">
+                  <button onClick={() => setPhotoIndex(prev => (prev > 0 ? prev - 1 : maxPhotosPerRoom - 1))} className="w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center">←</button>
+                  <button onClick={() => setPhotoIndex(prev => (prev < maxPhotosPerRoom - 1 ? prev + 1 : 0))} className="w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center">→</button>
+                </div>
+              )}
+              <div className="absolute bottom-6 left-6 text-left">
+                <h1 className="text-2xl font-black text-white italic">"ห้อง {viewingRoom} รุ่น 37"</h1>
+                <p className="text-pink-400 text-[10px] font-bold uppercase">Memory {photoIndex + 1} / {maxPhotosPerRoom}</p>
+              </div>
+            </div>
+            {!isCleanView && (
+              <div className="p-6 space-y-6">
+                <div className="bg-pink-50/50 p-4 rounded-2xl border border-pink-100 text-sm text-slate-600 italic text-center relative">"{blessing}"<button onClick={randomBlessing} className="block w-full mt-2 text-[9px] text-slate-400 underline">Random Blessing 🎲</button></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={handleShare} className="py-3 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg">🔗 {shareStatus}</button>
+                  <button onClick={() => setIsCleanView(true)} className="py-3 bg-pink-100 text-pink-600 rounded-xl text-xs font-bold">📸 Capture Mode</button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[...Array(14)].map((_, i) => (
+                    <button key={i} onClick={() => { setViewingRoom(`6/${i+1}`); setPhotoIndex(0); }} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${viewingRoom === `6/${i+1}` ? 'bg-pink-500 text-white' : 'bg-slate-50 text-slate-400'}`}>6/{i + 1}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {isCleanView && <button onClick={() => setIsCleanView(false)} className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-pink-500 text-white rounded-full text-xs font-bold shadow-2xl animate-bounce">Back to Normal</button>}
+          </div>
+        </motion.div>
+      );
+    }
+
+    // 💬 4. หน้าคำถามความลับ (New)
+    if (currentStage === 'secret') {
+      const q = secretQuestions[secretStep];
+      return (
+        <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} className="w-full max-w-sm px-6 font-sans">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-t-8 border-pink-400">
+            <p className="text-pink-300 text-[10px] font-black uppercase mb-4 tracking-widest">Secret Question {secretStep + 1}/3</p>
+            <h2 className="text-xl font-black text-slate-800 mb-6 italic">{q.title}</h2>
+            <textarea 
+              className="w-full p-5 bg-slate-50 rounded-2xl text-sm border-none focus:ring-2 focus:ring-pink-300 mb-8 transition-all"
+              placeholder={q.placeholder}
+              rows="4"
+              onChange={(e) => setSecrets({...secrets, [q.id]: e.target.value})}
+            />
+            <button onClick={handleSecretSubmit} className="w-full py-4 bg-pink-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">ถัดไป →</button>
+          </div>
+        </motion.div>
+      );
+    }
+
+    // 💌 5. หน้าจดหมาย (Original Logic)
+    if (currentStage === 'result') {
       const personalNote = getPersonalNote();
       return (
         <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm mx-auto px-6 py-10 font-sans">
           <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-t-[6px] border-pink-200 relative overflow-hidden">
             <div className="absolute top-6 right-6 opacity-[0.05] text-7xl font-black italic">37</div>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6">Final Page • {userName} ม.{userRoom}</p>
-            
             <div className="space-y-6 text-slate-600">
               <h2 className="text-2xl font-black text-slate-800 italic">แด่... {userName}</h2>
               <p className="text-sm leading-relaxed font-light">ยังจำวันแรกที่เดินผ่านรั้ว <span className="text-pink-400 font-bold">ต.อ.น.</span> ได้ไหม? จากคนแปลกหน้า สู่ความทรงจำที่จะอยู่กับเราตลอดไป...</p>
@@ -157,7 +208,6 @@ export default function GameContainer() {
               </div>
               <p className="text-lg font-black text-slate-800 leading-tight">ขอบคุณที่เติบโตมาด้วยกันนะ <br/><span className="text-pink-400 italic">อภินิหารสะพานสูง</span> ตลอดไป</p>
             </div>
-
             <div className="mt-10 pt-6 border-t border-slate-50 flex justify-between items-center">
               <div><p className="text-[8px] font-bold text-pink-300">Signed,</p><p className="text-sm font-black text-slate-800 italic">Class 37 Archive</p></div>
               <button onClick={() => { setShowFinalFrame(true); randomBlessing(); }} className="px-6 py-3 bg-pink-500 text-white rounded-xl text-xs font-bold shadow-lg">เปิดภาพสุดท้าย →</button>
@@ -167,9 +217,8 @@ export default function GameContainer() {
       );
     }
 
-    // 🎮 3. หน้าเล่นเกม (ย้ายตัวแปร scene มาไว้ตรงนี้เพื่อแก้ Error)
+    // 🎮 6. หน้าเล่นเกม (Original Logic)
     const scene = tunStory[step]; 
-
     return (
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="w-full max-w-sm mx-auto px-6 py-4">
@@ -183,7 +232,7 @@ export default function GameContainer() {
               <p className="text-slate-400 text-sm mb-8 font-light leading-relaxed">{scene?.description}</p>
               <div className="space-y-3">
                 {scene?.choices.map((choice, i) => (
-                  <button key={i} onClick={() => handleChoice(choice.score)} className="w-full p-4 rounded-2xl border border-slate-100 text-left text-xs font-bold text-slate-600 hover:bg-pink-500 hover:text-white transition-all">
+                  <button key={i} onClick={() => handleChoice(choice.score)} className="w-full p-4 rounded-2xl border border-slate-100 text-left text-xs font-bold text-slate-600 hover:bg-pink-500 hover:text-white transition-all group">
                     {choice.text} <span className="float-right opacity-0 group-hover:opacity-100">→</span>
                   </button>
                 ))}
