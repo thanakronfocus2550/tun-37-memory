@@ -63,8 +63,9 @@ export default function Home() {
         </Link>
       </motion.div>
 
+      {/* ปรับเป็นตัวตรง (ลบ italic) */}
       <div className="fixed bottom-10 w-full text-center opacity-[0.05] pointer-events-none">
-        <h2 className="text-[200px] font-black italic text-pink-500">37</h2>
+        <h2 className="text-[200px] font-black text-pink-500">37</h2>
       </div>
     </main>
   );
