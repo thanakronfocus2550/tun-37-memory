@@ -38,7 +38,7 @@ export default function GameContainer() {
 
   const secretQuestions = [
     { id: "q1", title: "มีอะไรจะบอกแต่ไม่กล้าบอกมั้ย?", placeholder: "ระบายออกมาได้เลย..." },
-    { id: "q2", title: "ถ้าพรุ่งนี้ตื่นมาแล้วยังอยู่ ม.4 แกจะทำอะไร?", placeholder: "อยากแก้ไขอะไรมั้ย..." },
+    { id: "q2", title: "ถ้าพรุ่งนี้ตื่นมาแล้วยังอยู่ ม.4 คุณจะทำอะไร?", placeholder: "อยากแก้ไขอะไรมั้ย..." },
     { id: "q3", title: "ฝากข้อความถึง 'ใครบางคน' ในรุ่น 37 หน่อย", placeholder: "บอกผ่านท้องฟ้าสะพานสูงไป..." }
   ];
 
@@ -129,8 +129,8 @@ export default function GameContainer() {
               </div>
             </div>
             <p className="text-[10px] font-black text-pink-400 uppercase tracking-widest mb-2">Developed By</p>
-            <h2 className="text-xl font-black text-slate-800 mb-2 leading-tight">ธนกร และคู่หู</h2>
-            <p className="text-slate-500 font-light mb-10 text-sm">ข้อมูลเดิม... เพิ่มเติมคือความตั้งใจ <br/> รุ่น 37 ต.อ.น.</p>
+            <h2 className="text-xl font-black text-slate-800 mb-2 leading-tight">ธนกร และ ธนกฤต</h2>
+            <p className="text-slate-500 font-light mb-10 text-sm"><br/> รุ่น 37 ต.อ.น.</p>
             <button onClick={() => setCurrentStage('game')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">เริ่มบันทึกความทรงจำ</button>
           </div>
         </motion.div>
@@ -258,7 +258,7 @@ export default function GameContainer() {
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-[#fafafa] relative overflow-x-hidden">
-      <audio ref={audioRef} src="/audio/bgm-main.mp3" loop preload="auto" />
+      <audio ref={audioRef} src="/audio/bgm-main.mp" loop preload="auto" />
       {renderView()}
     </div>
   );
