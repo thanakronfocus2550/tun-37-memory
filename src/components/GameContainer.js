@@ -258,7 +258,7 @@ export default function GameContainer() {
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-[#fafafa] relative overflow-x-hidden">
-      <audio ref={audioRef} src="/audio/bgm-main.mp" loop preload="auto" />
+      <audio ref={audioRef} src="/audio/bgm-main.mp3" loop preload="auto" />
       {renderView()}
     </div>
   );
