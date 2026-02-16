@@ -1,8 +1,10 @@
-"use client"; 
-import { useState, useEffect, useRef, Suspense } from 'react';
+"use client";
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import { tunStory } from '../data/story'; 
+import { tunStory } from '../data/story';
+import MusicControl from './MusicControl';
+import ShareCard from './ShareCard';
 
 export default function GameContainer() {
   const searchParams = useSearchParams();
@@ -10,7 +12,7 @@ export default function GameContainer() {
   const userRoom = searchParams.get('room') || '37';
 
   // --- States สำหรับ Version 1.2 ---
-  const [currentStage, setCurrentStage] = useState('intro'); 
+  const [currentStage, setCurrentStage] = useState('intro');
   const [secretStep, setSecretStep] = useState(0);
   const [secrets, setSecrets] = useState({ q1: "", q2: "", q3: "" });
 
@@ -18,14 +20,14 @@ export default function GameContainer() {
   const [scores, setScores] = useState({ stealth: 0, chill: 0, friendship: 0, sport: 0, student: 0 });
   const [showFinalFrame, setShowFinalFrame] = useState(false);
 
-  const [viewingRoom, setViewingRoom] = useState(userRoom); 
-  const [photoIndex, setPhotoIndex] = useState(0); 
-  const maxPhotosPerRoom = 5; 
+  const [viewingRoom, setViewingRoom] = useState(userRoom);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const maxPhotosPerRoom = 5;
 
   const [blessing, setBlessing] = useState("");
   const [isCleanView, setIsCleanView] = useState(false);
   const [shareStatus, setShareStatus] = useState("แชร์ความทรงจำ");
-  const audioRef = useRef(null);
+  const [showShareCard, setShowShareCard] = useState(false);
 
   const blessings = [
     "ขอให้แกได้เข้าคณะที่ฝันนะ มารีวิวชีวิตมหาลัยให้ฟังด้วย!",
@@ -47,15 +49,7 @@ export default function GameContainer() {
     setBlessing(nextBlessing);
   };
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = 0.4;
-      audioRef.current.play().catch(() => console.log("Music standby"));
-    }
-  }, []);
-
   const handleChoice = (scoreKey) => {
-    if (audioRef.current && audioRef.current.paused) audioRef.current.play();
     setScores(prev => ({ ...prev, [scoreKey]: prev[scoreKey] + 1 }));
     if (step < tunStory.length - 1) {
       setStep(step + 1);
@@ -103,8 +97,8 @@ export default function GameContainer() {
           <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-pink-100">
             <h1 className="text-3xl font-black text-slate-800 mb-6 uppercase tracking-tighter">วันสุดท้ายที่... ต.อ.น.</h1>
             <p className="text-slate-500 leading-relaxed font-light mb-10">
-              "ท้องฟ้าที่สะพานสูงวันนี้ดูแปลกไปกว่าทุกวัน... <br/>
-              เสียงกระดิ่งเลิกเรียนครั้งสุดท้ายกำลังจะดังขึ้น <br/>
+              "ท้องฟ้าที่สะพานสูงวันนี้ดูแปลกไปกว่าทุกวัน... <br />
+              เสียงกระดิ่งเลิกเรียนครั้งสุดท้ายกำลังจะดังขึ้น <br />
               เก็บความทรงจำของแกใส่กระเป๋า แล้วเดินไปด้วยกันนะ"
             </p>
             <button onClick={() => setCurrentStage('credits')} className="w-full py-4 bg-pink-500 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">ถัดไป</button>
@@ -121,16 +115,16 @@ export default function GameContainer() {
             <div className="flex justify-center gap-4 mb-6">
               {/* รูปมึง */}
               <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-pink-200 shadow-md">
-                 <img src="/images/me.jpg" className="w-full h-full object-cover" onError={(e) => e.target.src = "/images/group-37.jpg"} />
+                <img src="/images/me.jpg" className="w-full h-full object-cover" onError={(e) => e.target.src = "/images/group-37.jpg"} />
               </div>
               {/* รูปเพื่อน (ถ้ามีไฟล์ me2.jpg) */}
               <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-pink-200 shadow-md">
-                 <img src="/images/me2.jpg" className="w-full h-full object-cover" onError={(e) => e.target.src = "/images/group-37.jpg"} />
+                <img src="/images/me2.jpg" className="w-full h-full object-cover" onError={(e) => e.target.src = "/images/group-37.jpg"} />
               </div>
             </div>
             <p className="text-[10px] font-black text-pink-400 uppercase tracking-widest mb-2">Developed By</p>
             <h2 className="text-xl font-black text-slate-800 mb-2 leading-tight">ธนกร และ ธนกฤต</h2>
-            <p className="text-slate-500 font-light mb-10 text-sm"><br/> รุ่น 37 ต.อ.น.</p>
+            <p className="text-slate-500 font-light mb-10 text-sm"><br /> รุ่น 37 ต.อ.น.</p>
             <button onClick={() => setCurrentStage('game')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-all">เริ่มบันทึกความทรงจำ</button>
           </div>
         </motion.div>
@@ -139,7 +133,7 @@ export default function GameContainer() {
 
     // 📸 3. หน้าแกลเลอรี (ตัวตรง)
     if (showFinalFrame) {
-      const roomFolder = viewingRoom.replace("/", "-"); 
+      const roomFolder = viewingRoom.replace("/", "-");
       const photoSrc = `/images/room${roomFolder}/${photoIndex}.jpg`;
       return (
         <motion.div key="final" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md mx-auto px-4 py-6 font-sans">
@@ -169,7 +163,7 @@ export default function GameContainer() {
                 <div className="pt-4 border-t border-slate-50">
                   <div className="grid grid-cols-4 gap-2">
                     {[...Array(14)].map((_, i) => (
-                      <button key={i} onClick={() => { setViewingRoom(`6/${i+1}`); setPhotoIndex(0); }} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${viewingRoom === `6/${i+1}` ? 'bg-pink-500 text-white shadow-md' : 'bg-slate-50 text-slate-400'}`}>6/{i + 1}</button>
+                      <button key={i} onClick={() => { setViewingRoom(`6/${i + 1}`); setPhotoIndex(0); }} className={`py-2 rounded-lg text-[10px] font-bold transition-all ${viewingRoom === `6/${i + 1}` ? 'bg-pink-500 text-white shadow-md' : 'bg-slate-50 text-slate-400'}`}>6/{i + 1}</button>
                     ))}
                   </div>
                 </div>
@@ -189,11 +183,11 @@ export default function GameContainer() {
           <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 border-t-8 border-pink-400">
             <p className="text-pink-300 text-[10px] font-black uppercase mb-4 tracking-widest">Secret Question {secretStep + 1}/3</p>
             <h2 className="text-xl font-black text-slate-800 mb-6">{q.title}</h2>
-            <textarea 
+            <textarea
               className="w-full p-5 bg-slate-50 rounded-2xl text-sm border-none focus:ring-2 focus:ring-pink-300 mb-8 transition-all"
               placeholder={q.placeholder}
               rows="4"
-              onChange={(e) => setSecrets({...secrets, [q.id]: e.target.value})}
+              onChange={(e) => setSecrets({ ...secrets, [q.id]: e.target.value })}
             />
             <button onClick={handleSecretSubmit} className="w-full py-4 bg-pink-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all">ถัดไป →</button>
           </div>
@@ -215,11 +209,17 @@ export default function GameContainer() {
               <div className="p-5 bg-pink-50/50 rounded-2xl border-2 border-dashed border-pink-100 text-center">
                 <p className="text-base font-bold text-pink-500">"{personalNote}"</p>
               </div>
-              <p className="text-lg font-black text-slate-800 leading-tight">ขอบคุณที่เติบโตมาด้วยกันนะ <br/><span className="text-pink-400 font-bold">อภินิหารสะพานสูง</span> ตลอดไป</p>
+              <p className="text-lg font-black text-slate-800 leading-tight">ขอบคุณที่เติบโตมาด้วยกันนะ <br /><span className="text-pink-400 font-bold">อภินิหารสะพานสูง</span> ตลอดไป</p>
             </div>
-            <div className="mt-10 pt-6 border-t border-slate-50 flex justify-between items-center">
-              <div><p className="text-[8px] font-bold text-pink-300 uppercase tracking-widest">Signed,</p><p className="text-sm font-black text-slate-800">Class 37 Archive</p></div>
-              <button onClick={() => { setShowFinalFrame(true); randomBlessing(); }} className="px-6 py-3 bg-pink-500 text-white rounded-xl text-xs font-bold shadow-lg">เปิดภาพสุดท้าย →</button>
+            <div className="mt-10 pt-6 border-t border-slate-50 space-y-3">
+              <div className="flex justify-between items-center mb-4">
+                <div><p className="text-[8px] font-bold text-pink-300 uppercase tracking-widest">Signed,</p><p className="text-sm font-black text-slate-800">Class 37 Archive</p></div>
+                <button onClick={() => { setShowFinalFrame(true); randomBlessing(); }} className="px-6 py-3 bg-pink-500 text-white rounded-xl text-xs font-bold shadow-lg">เปิดภาพสุดท้าย →</button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => setShowShareCard(true)} className="py-3 bg-gradient-to-r from-pink-500 to-pink-400 text-white rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all">📸 สร้าง Share Card</button>
+                <a href="/board" className="py-3 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg text-center active:scale-95 transition-all block">💬 กระดานข้อความ</a>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -227,7 +227,7 @@ export default function GameContainer() {
     }
 
     // 🎮 6. หน้าเล่นเกม (ตัวตรง)
-    const scene = tunStory[step]; 
+    const scene = tunStory[step];
     return (
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="w-full max-w-sm mx-auto px-6 py-4">
@@ -258,7 +258,16 @@ export default function GameContainer() {
 
   return (
     <div className="flex items-center justify-center min-h-screen w-full bg-[#fafafa] relative overflow-x-hidden">
-      <audio ref={audioRef} src="/audio/bgm-main.mp3" loop preload="auto" />
+      <MusicControl />
+      {showShareCard && (
+        <ShareCard
+          userName={userName}
+          userRoom={userRoom}
+          scores={scores}
+          personalNote={getPersonalNote()}
+          onClose={() => setShowShareCard(false)}
+        />
+      )}
       {renderView()}
     </div>
   );
