@@ -114,8 +114,8 @@ export default function GameContainer() {
           <div className="bg-white/80 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-pink-100">
             <div className="flex justify-center gap-4 mb-6">
               {/* รูปมึง */}
-              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-pink-200 shadow-md">
-                <img src="/images/me.jpg" className="w-full h-full object-cover" onError={(e) => e.target.src = "/images/group-37.jpg"} />
+              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-pink-200 shadow-md mx-auto">
+                <img src="/images/me.jpg" className="w-full h-full object-cover object-center" onError={(e) => e.target.src = "/images/group-37.jpg"} />
               </div>
               {/* รูปเพื่อน (ถ้ามีไฟล์ me2.jpg) */}
               <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-pink-200 shadow-md">
